@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Uninsured Rates</title>
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+
+  <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v3/3.15/themes/css/cartodb.css" />
+
+  <style>
+    html,
+    body,
+    #map {
+      height: 100%;
+      padding: 0;
+      margin: 0;
+      background: #3d3d3d;
+      font-family: sans-serif;
+    }
+    h1 {
+      font-weight: normal;
+      margin-left: 10px;
+      color: whitesmoke;
+    }
+    .cartodb-legend span {
+      width: 10px;
+      height: 10px;
+      position: relative;
+      margin-right: 10px;
+      float: left;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Uninsured Rates of Adults by County</h1>
+  <div id="map"></div>
+
+  <div class='cartodb-legend choropleth'>
+    <div class="legend-title">% of Uninsured Adults</div>
+    <ul>
+
+      <li class="Legend-categoryListItem u-flex u-justifySpace u-alignCenter">
+        <p class="Legend-categoryTitle CDB-Text CDB-Size-small u-upperCase u-ellipsis" title="4 - 13"><span class="Legend-categoryCircle" style="background: #f7feae;"></span>4 - 13</p>
+      </li>
+
+      <li class="Legend-categoryListItem u-flex u-justifySpace u-alignCenter">
+        <p class="Legend-categoryTitle CDB-Text CDB-Size-small u-upperCase u-ellipsis" title="14 - 23"><span class="Legend-categoryCircle" style="background: #9bd8a4;"></span>14 - 23</p>
+      </li>
+
+      <li class="Legend-categoryListItem u-flex u-justifySpace u-alignCenter">
+        <p class="Legend-categoryTitle CDB-Text CDB-Size-small u-upperCase u-ellipsis" title="24 - 32"><span class="Legend-categoryCircle" style="background: #46aea0;"></span>24 - 32</p>
+      </li>
+
+      <li class="Legend-categoryListItem u-flex u-justifySpace u-alignCenter">
+        <p class="Legend-categoryTitle CDB-Text CDB-Size-small u-upperCase u-ellipsis" title="33 - 42"><span class="Legend-categoryCircle" style="background: #058092;"></span>33 - 42</p>
+      </li>
+
+      <li class="Legend-categoryListItem u-flex u-justifySpace u-alignCenter">
+        <p class="Legend-categoryTitle CDB-Text CDB-Size-small u-upperCase u-ellipsis" title="43 - 52"> <span class="Legend-categoryCircle" style="background: #045275;"></span>43 - 52</p>
+      </li>
+
+    </ul>
+
+  </div>
+
+  <script src="http://libs.cartocdn.com/cartodb.js/v3/3.15/cartodb.js"></script>
+
+  <script type="cartocss/html" id="counties-styles">
+
+    #layer { polygon-fill: ramp([uninsured], (#f7feae, #9bd8a4, #46aea0, #058092, #045275), jenks); } #layer::outline { line-width: 0.5; line-color: #FFF; line-opacity: 0.5; }
+
+  </script>
+
+  <script type="cartocss/html" id="land-styles">
+
+    #na_land_clipped['mapnik::geometry_type'=1] { marker-width: 7; marker-fill: #FFB927; marker-fill-opacity: 0.9; marker-line-color: #FFF; marker-line-width: 1; marker-line-opacity: 1; marker-placement: point; marker-type: ellipse; marker-allow-overlap:
+    true; } #na_land_clipped['mapnik::geometry_type'=2] { line-color: #3EBCAE; line-width: 1.5; line-opacity: 1; } #na_land_clipped['mapnik::geometry_type'=3] { polygon-fill: #374C70; polygon-opacity: 0.9; polygon-gamma: 0.5; line-color: #FFF; line-width:
+    1; line-opacity: 0.5; line-comp-op: soft-light; }
+  </script>
+
+  <script type="cartocss/html" id="grat-styles">
+    #na_grat_clipped{ line-width: 1.5; line-color: #c4cccb; line-opacity: 0.16; }
+  </script>
+
+  <script type="infowindow/html" id="infowindow_template">
+    <span> custom </span>
+    <div class="cartodb-popup">
+      <a href="#close" class="cartodb-popup-close-button close">x</a>
+      <div class="cartodb-popup-content-wrapper">
+        <div class="cartodb-popup-content">
+          <h3>{{uninsured_adults_county_1.uninsured}}.{{uninsured_adults_county_1.name}}</h3>
+        </div>
+      </div>
+      <div class="cartodb-popup-tip-container"></div>
+    </div>
+  </script>
+
+  <script>
+    var map = L.map('map', {
+      center: [-10, 0], // map center
+      zoom: 4 // initial zoom level
+    });
+
+    // var cartoCSS = "#layer {" +
+    //   "polygon-fill: ramp([uninsured], (#ffffb2, #fed976, #feb24c, #fd8d3c, #fc4e2a, #e31a1c, #b10026), jenks);" +
+    //   "line-width: 1;" +
+    //   "line-color: #FFF;" +
+    //   "line-opacity: 0.5;" +
+    //   "}";
+
+    var sourceObject = {
+      user_name: 'chrispappas007', // string of your CARTO user name,
+      type: 'cartodb',
+      sublayers: [{
+          sql: "SELECT ST_Transform(the_geom, 2163) AS the_geom_webmercator, cartodb_id FROM na_grat_clipped",
+          cartocss: $("#grat-styles").text()
+        },
+        {
+          sql: "SELECT ST_Transform(the_geom, 2163) AS the_geom_webmercator, cartodb_id FROM na_land_clipped",
+          cartocss: $("#land-styles").text()
+        },
+        {
+          sql: "SELECT ST_Transform(the_geom, 2163) AS the_geom_webmercator, cartodb_id, uninsured FROM uninsured_adults_county_1",
+          cartocss: $("#counties-styles").text()
+        }
+      ]
+    }
+    cartodb.createLayer(map, sourceObject).addTo(map)
+      .on('done', function(layer) {
+        var sublayer = layer.getSubLayer(2);
+        sublayer.infowindow.set('template', $('#infowindow_template').html());
+      }).on('error', function() {
+        console.log("some error occurred");
+      });
+  </script>
+</body>
+
+</html>
